@@ -1,7 +1,10 @@
 package com.br.elovetapi.pet.controller;
 
+import com.br.elovetapi.pet.dtos.PetRequestDTO;
+import com.br.elovetapi.pet.dtos.PetResponseDTO;
 import com.br.elovetapi.pet.model.Pet;
 import com.br.elovetapi.pet.service.PetService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,7 +25,7 @@ public class PetController {
         return petService.getAllPets();
     }
 
-    @GetMapping("/{eloId")
+    @GetMapping("/{eloId}")
     @ResponseStatus(HttpStatus.OK)
     public Pet getPetById(@PathVariable Long eloId) {
         return petService.getPetById(eloId);
@@ -30,18 +33,18 @@ public class PetController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Pet createPet(@RequestBody Pet pet){
+    public PetResponseDTO createPet(@Valid @RequestBody PetRequestDTO pet){
         return petService.createPet(pet);
     }
 
-    @PutMapping
+    @PutMapping("/{eloId}")
     @ResponseStatus(HttpStatus.OK)
-    public Pet updatePet(@RequestBody Pet pet){
-        return petService.updatePet(pet);
+    public PetResponseDTO updatePet(@PathVariable Long eloId, @Valid @RequestBody PetRequestDTO pet){
+        return petService.updatePet(eloId, pet);
     }
 
     @DeleteMapping("/{eloId}")
-    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deletePet(@PathVariable Long eloId){
         petService.deletePet(eloId);
     }
