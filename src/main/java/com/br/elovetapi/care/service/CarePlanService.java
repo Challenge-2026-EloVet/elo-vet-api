@@ -2,137 +2,133 @@ package com.br.elovetapi.care.service;
 
 import com.br.elovetapi.care.dtos.CarePlanRequestDTO;
 import com.br.elovetapi.care.dtos.CarePlanResponseDTO;
+import com.br.elovetapi.care.dtos.CarePlanItemDTO;
 import com.br.elovetapi.care.dtos.MarkItemRequestDTO;
+import com.br.elovetapi.care.exceptions.CarePlanNotFoundException;
+import com.br.elovetapi.care.exceptions.ItemDoesNotBelongCarePlanException;
+import com.br.elovetapi.care.exceptions.ItemNotFoundException;
 import com.br.elovetapi.care.mapper.CarePlanMapper;
 import com.br.elovetapi.care.model.CarePlan;
 import com.br.elovetapi.care.model.CarePlanItem;
-import com.br.elovetapi.care.model.Notification;
 import com.br.elovetapi.care.repository.CarePlanItemRepository;
 import com.br.elovetapi.care.repository.CarePlanRepository;
-import com.br.elovetapi.care.repository.NotificationRepository;
+import com.br.elovetapi.pet.exceptions.PetNotFoundException;
 import com.br.elovetapi.user.repository.UserRepository;
 import com.br.elovetapi.user.model.User;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.Objects;
+
+import com.br.elovetapi.care.exceptions.CarePlanValidationException;
 
 @Service
 public class CarePlanService {
 
     private final CarePlanRepository carePlanRepository;
     private final CarePlanItemRepository carePlanItemRepository;
-    private final NotificationRepository notificationRepository;
+    private final NotificationService notificationService;
     private final UserRepository userRepository;
 
-    public CarePlanService(CarePlanRepository carePlanRepository, CarePlanItemRepository carePlanItemRepository, NotificationRepository notificationRepository, UserRepository userRepository) {
+    public CarePlanService(CarePlanRepository carePlanRepository, CarePlanItemRepository carePlanItemRepository, NotificationService notificationService, UserRepository userRepository) {
         this.carePlanRepository = carePlanRepository;
         this.carePlanItemRepository = carePlanItemRepository;
-        this.notificationRepository = notificationRepository;
+        this.notificationService = notificationService;
         this.userRepository = userRepository;
     }
 
     @Transactional
     public CarePlanResponseDTO createCarePlan(Long veterinaryId, CarePlanRequestDTO dto){
-        if(dto.petId() == null) throw new IllegalArgumentException("petId is required");
-        if(dto.petOwnerId() == null) throw new IllegalArgumentException("petOwnerId is required");
-        if(dto.items() == null || dto.items().isEmpty()) throw new IllegalArgumentException("care plan must have at least one item");
+        validateCreateDto(dto);
 
-        Optional<User> ownerOpt = userRepository.findById(dto.petOwnerId());
-        if(ownerOpt.isEmpty()) throw new IllegalArgumentException("petOwnerId not found");
+        userRepository.findById(dto.petOwnerId()).orElseThrow(() -> new PetNotFoundException("Pet not found with id: " + dto.petId()));
 
-        var principal = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        Long creatorId = principal.getId();
+        User creator = getAuthenticatedUser();
 
-        CarePlan cp = CarePlanMapper.toEntity(veterinaryId, dto, creatorId);
+        CarePlan cp = CarePlanMapper.toEntity(veterinaryId, dto, creator.getId());
         CarePlan saved = carePlanRepository.save(cp);
 
-        List<CarePlanItem> items = dto.items().stream().map(i -> CarePlanMapper.toItemEntity(saved.getId(), i)).collect(Collectors.toList());
-        var savedItems = carePlanItemRepository.saveAll(items);
+        List<CarePlanItem> items = saveItems(saved.getId(), dto.items());
 
-        Notification n = new Notification();
-        n.setTargetUserId(dto.petOwnerId());
-        n.setCarePlanId(saved.getId());
-        n.setType("HANDOFF");
-        n.setPayload("Care plan created with " + savedItems.size() + " items");
-        n.setSentAt(LocalDateTime.now());
-        notificationRepository.save(n);
+        notificationService.createNotification(dto.petOwnerId(), saved.getId(), "HANDOFF", "Care plan created with " + items.size() + " items");
 
-        return CarePlanMapper.toDTO(saved, savedItems);
+        return CarePlanMapper.toDTO(saved, items);
     }
 
     public List<CarePlanResponseDTO> listCarePlansForUser(Long userId){
-        var principal = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        boolean isAdmin = principal.getUserRole() != null && principal.getUserRole().name().equals("ADMIN");
-        if(!isAdmin && !principal.getId().equals(userId)) throw new SecurityException("not authorized");
+        User principal = getAuthenticatedUser();
+        assertOwnerOrAdmin(userId, principal);
 
         List<CarePlan> plans = carePlanRepository.findByPetOwnerId(userId);
-        return plans.stream().map(p -> {
-            List<CarePlanItem> items = carePlanItemRepository.findByCarePlanId(p.getId());
-            return CarePlanMapper.toDTO(p, items);
-        }).collect(Collectors.toList());
+        return plans.stream()
+                .map(p -> CarePlanMapper.toDTO(p, carePlanItemRepository.findByCarePlanId(p.getId())))
+                .toList();
     }
 
     @Transactional
     public CarePlanResponseDTO markItem(Long carePlanId, Long itemId, MarkItemRequestDTO dto){
-        var principal = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User principal = getAuthenticatedUser();
 
-        Optional<CarePlan> cpOpt = carePlanRepository.findById(carePlanId);
-        if(cpOpt.isEmpty()) throw new IllegalArgumentException("care plan not found");
-        CarePlan cp = cpOpt.get();
-        boolean isAdmin = principal.getUserRole() != null && principal.getUserRole().name().equals("ADMIN");
-        if(!isAdmin && !principal.getId().equals(cp.getPetOwnerId())) throw new SecurityException("not authorized");
+        CarePlan cp = carePlanRepository.findById(carePlanId).orElseThrow(() -> new CarePlanNotFoundException("Care plan not found"));
+        assertOwnerOrAdmin(cp.getPetOwnerId(), principal);
 
-        Optional<CarePlanItem> itemOpt = carePlanItemRepository.findById(itemId);
-        if(itemOpt.isEmpty()) throw new IllegalArgumentException("item not found");
-        CarePlanItem item = itemOpt.get();
-        if(!item.getCarePlanId().equals(carePlanId)) throw new IllegalArgumentException("item does not belong to care plan");
+        CarePlanItem item = carePlanItemRepository.findById(itemId).orElseThrow(() -> new ItemNotFoundException("Item not found"));
+        if(!Objects.equals(item.getCarePlanId(), carePlanId)) throw new ItemDoesNotBelongCarePlanException("Item does not belong to care plan");
 
         item.setStatus(dto.status());
         carePlanItemRepository.save(item);
 
+        notificationService.createNotification(principal.getId(), carePlanId, "AUDIT_MARK_ITEM", "Item " + item.getId() + " marked " + dto.status() + ". Note: " + dto.note());
 
-        Notification audit = new Notification();
-        audit.setTargetUserId(principal.getId());
-        audit.setCarePlanId(carePlanId);
-        audit.setType("AUDIT_MARK_ITEM");
-        audit.setPayload("Item " + item.getId() + " marked " + dto.status() + ". Note: " + dto.note());
-        audit.setSentAt(LocalDateTime.now());
-        notificationRepository.save(audit);
-
-        List<CarePlanItem> items = carePlanItemRepository.findByCarePlanId(carePlanId);
-        return CarePlanMapper.toDTO(cp, items);
+        return CarePlanMapper.toDTO(cp, carePlanItemRepository.findByCarePlanId(carePlanId));
     }
 
-    public int processReminders(){
-        var today = java.time.LocalDate.now();
-        List<CarePlanItem> items = carePlanItemRepository.findAll().stream().filter(i -> i.getStatus() != null && i.getStatus().equals("PENDING") && i.getDueDate() != null && i.getDueDate().isEqual(today)).collect(Collectors.toList());
-        int count = 0;
-        for(var item: items){
-            Optional<CarePlan> cpOpt = carePlanRepository.findById(item.getCarePlanId());
-            if(cpOpt.isEmpty()) continue;
-            CarePlan cp = cpOpt.get();
-            Notification n = new Notification();
-            n.setTargetUserId(cp.getPetOwnerId());
-            n.setCarePlanId(cp.getId());
-            n.setType("REMINDER");
-            n.setPayload("Reminder: " + item.getTitle());
-            n.setSentAt(LocalDateTime.now());
-            notificationRepository.save(n);
+    public int processReminders() {
+        LocalDate today = LocalDate.now();
+        List<CarePlanItem> dueItems = carePlanItemRepository.findAll().stream()
+                .filter(i -> "PENDING".equals(i.getStatus()) && i.getDueDate() != null && i.getDueDate().isEqual(today))
+                .toList();
 
-            Notification audit = new Notification();
-            audit.setTargetUserId(cp.getPetOwnerId());
-            audit.setCarePlanId(cp.getId());
-            audit.setType("AUDIT_REMINDER");
-            audit.setPayload("Reminder sent for item " + item.getId());
-            audit.setSentAt(LocalDateTime.now());
-            notificationRepository.save(audit);
-            count++;
-        }
-        return count;
+        dueItems.forEach(item ->
+                carePlanRepository.findById(item.getCarePlanId()).ifPresent(cp -> {
+                    notificationService.createNotification(cp.getPetOwnerId(), cp.getId(), "REMINDER", "Reminder: " + item.getTitle());
+                    notificationService.createNotification(cp.getPetOwnerId(), cp.getId(), "AUDIT_REMINDER", "Reminder sent for item " + item.getId());
+                })
+        );
+
+        return dueItems.size();
+    }
+
+    private void validateCreateDto(CarePlanRequestDTO dto) {
+        require(dto != null, "Care plan request is required");
+        require(dto.petId() != null, "PetId is required");
+        require(dto.petOwnerId() != null, "PetOwnerId is required");
+        require(dto.items() != null && !dto.items().isEmpty(), "Care plan must have at least one item");
+    }
+
+    private void require(boolean expression, String message) {
+        if (!expression) throw new CarePlanValidationException(message);
+    }
+
+    private User getAuthenticatedUser() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getPrincipal() == null) throw new SecurityException("Not authenticated");
+        return (User) auth.getPrincipal();
+    }
+
+    private boolean isAdmin(User user) {
+        return user.getUserRole() != null && user.getUserRole().name().equals("ADMIN");
+    }
+
+    private void assertOwnerOrAdmin(Long ownerId, User principal) {
+        if (!isAdmin(principal) && !Objects.equals(principal.getId(), ownerId)) throw new SecurityException("Not authorized");
+    }
+
+    private List<CarePlanItem> saveItems(Long carePlanId, List<CarePlanItemDTO> itemsDto) {
+        List<CarePlanItem> items = itemsDto.stream().map(i -> CarePlanMapper.toItemEntity(carePlanId, i)).toList();
+        return carePlanItemRepository.saveAll(items);
     }
 }

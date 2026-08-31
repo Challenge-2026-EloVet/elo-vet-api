@@ -1,5 +1,7 @@
 package com.br.elovetapi.care.validation;
 
+import com.br.elovetapi.care.exceptions.CarePlanValidationException;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -43,5 +45,12 @@ public class CareValidationHandler {
         log.warn("Security error: {}", exception.getMessage());
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body(new ErrorResponse(exception.getMessage(), HttpStatus.FORBIDDEN.value()));
+    }
+
+    @ExceptionHandler(CarePlanValidationException.class)
+    public ResponseEntity<ErrorResponse> handleCarePlanValidation(CarePlanValidationException exception) {
+        log.warn("Domain validation error: {}", exception.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse(exception.getMessage(), HttpStatus.BAD_REQUEST.value()));
     }
 }
