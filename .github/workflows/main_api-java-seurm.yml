@@ -1,7 +1,7 @@
 # Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 
-name: Build and deploy JAR app to Azure Web App - api-java-seurm
+name: Build and deploy JAR app to Azure Web App - elo-vet-api
 
 on:
   push:
@@ -24,19 +24,17 @@ jobs:
           java-version: '21'
           distribution: 'microsoft'
 
-      - name: Build with Maven
-        run: mvn clean install -Dspring.datasource.url="${{ secrets.DB_URL }}" -Dspring.datasource.username="${{ secrets.DB_USER }}" -Dspring.datasource.password="${{ secrets.DB_PASS }}"
-        env:
-          DB_URL: ${{ secrets.DB_URL }}
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASS: ${{ secrets.DB_PASS }}
-        
+      - name: Build with Gradle (Skipping Tests)
+        run: |
+          chmod +x gradlew
+          ./gradlew build -x test
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: java-app
-          path: '${{ github.workspace }}/target/*.jar'
+          # O Gradle salva o arquivo .jar na pasta build/libs/ (diferente do Maven)
+          path: '${{ github.workspace }}/build/libs/*.jar'
 
   deploy:
     runs-on: ubuntu-latest
@@ -54,6 +52,7 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
+          # Certifique-se de que esses secrets existem no novo repositório Elo Vet!
           client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_F82BAEF4141647199EE2C7D63E5077DB }}
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_0B282A7B7C994E17A0A5CFE2259FA29D }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_7DF866885F304A2E9078887F8BC12616 }}
@@ -62,7 +61,6 @@ jobs:
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'api-java-seurm'
+          app-name: 'api-java-seurm' # Confirme se o nome do App Service na Azure é esse mesmo
           slot-name: 'Production'
           package: '*.jar'
-          
