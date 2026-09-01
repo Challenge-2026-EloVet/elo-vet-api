@@ -19,13 +19,18 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set up Java version
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: '21'
           distribution: 'microsoft'
 
       - name: Build with Maven
-        run: mvn clean install
+        run: mvn clean install -Dspring.datasource.url="${{ secrets.DB_URL }}" -Dspring.datasource.username="${{ secrets.DB_USER }}" -Dspring.datasource.password="${{ secrets.DB_PASS }}"
+        env:
+          DB_URL: ${{ secrets.DB_URL }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASS: ${{ secrets.DB_PASS }}
+        
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
@@ -49,9 +54,9 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_67ABE13CAEC54BEF9B89B8391E61D3BB }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_F686F7E0F92C45C4BEF32BF237F2FC96 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_68CD540DB0574DBFBF11DAB188732FD2 }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_F82BAEF4141647199EE2C7D63E5077DB }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_0B282A7B7C994E17A0A5CFE2259FA29D }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_7DF866885F304A2E9078887F8BC12616 }}
 
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
