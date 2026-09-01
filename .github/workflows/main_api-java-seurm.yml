@@ -1,7 +1,7 @@
 # Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 
-name: Build and deploy JAR app to Azure Web App - elo-vet-api
+name: Build and deploy JAR app to Azure Web App - api-java-seurm
 
 on:
   push:
@@ -19,22 +19,19 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set up Java version
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'microsoft'
 
-      - name: Build with Gradle (Skipping Tests)
-        run: |
-          chmod +x gradlew
-          ./gradlew build -x test
+      - name: Build with Maven
+        run: mvn clean install
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: java-app
-          # O Gradle salva o arquivo .jar na pasta build/libs/ (diferente do Maven)
-          path: '${{ github.workspace }}/build/libs/*.jar'
+          path: '${{ github.workspace }}/target/*.jar'
 
   deploy:
     runs-on: ubuntu-latest
@@ -52,9 +49,9 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_37395B29F14B4426B831E91C9212DB6C }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_48A5BA71F81B4BB6987067F65964CA41 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_333EFBEDE8C544008921D948818F2D3F }}
 
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
@@ -63,3 +60,4 @@ jobs:
           app-name: 'api-java-seurm'
           slot-name: 'Production'
           package: '*.jar'
+          
