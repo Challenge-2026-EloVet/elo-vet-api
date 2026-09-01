@@ -24,10 +24,8 @@ jobs:
           java-version: '21'
           distribution: 'microsoft'
 
-      - name: Build with Gradle
-        run: |
-          chmod +x gradlew
-          ./gradlew build -Dspring.datasource.url="${{ secrets.DB_URL }}" -Dspring.datasource.username="${{ secrets.DB_USER }}" -Dspring.datasource.password="${{ secrets.DB_PASS }}"
+      - name: Build with Maven
+        run: mvn clean install -Dspring.datasource.url="${{ secrets.DB_URL }}" -Dspring.datasource.username="${{ secrets.DB_USER }}" -Dspring.datasource.password="${{ secrets.DB_PASS }}"
         env:
           DB_URL: ${{ secrets.DB_URL }}
           DB_USER: ${{ secrets.DB_USER }}
