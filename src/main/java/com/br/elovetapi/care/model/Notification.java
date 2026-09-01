@@ -1,5 +1,6 @@
 package com.br.elovetapi.care.model;
 
+import com.br.elovetapi.care.enums.NotificationType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -18,7 +19,8 @@ public class Notification {
     private Long id;
     private Long targetUserId;
     private Long carePlanId;
-    private String type;
+    @Enumerated(EnumType.STRING)
+    private NotificationType type;
     private String payload;
     private LocalDateTime sentAt;
 }

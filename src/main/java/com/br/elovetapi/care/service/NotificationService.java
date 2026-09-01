@@ -1,5 +1,6 @@
 package com.br.elovetapi.care.service;
 
+import com.br.elovetapi.care.enums.NotificationType;
 import com.br.elovetapi.care.model.Notification;
 import com.br.elovetapi.care.repository.NotificationRepository;
 import org.springframework.stereotype.Service;
@@ -15,13 +16,13 @@ public class NotificationService {
         this.notificationRepository = notificationRepository;
     }
 
-    public void createNotification(Long targetUserId, Long carePlanId, String type, String payload) {
-        Notification n = new Notification();
-        n.setTargetUserId(targetUserId);
-        n.setCarePlanId(carePlanId);
-        n.setType(type);
-        n.setPayload(payload);
-        n.setSentAt(LocalDateTime.now());
-        notificationRepository.save(n);
+    public void createNotification(Long targetUserId, Long carePlanId, NotificationType type, String payload) {
+        Notification notification = new Notification();
+        notification.setTargetUserId(targetUserId);
+        notification.setCarePlanId(carePlanId);
+        notification.setType(type);
+        notification.setPayload(payload);
+        notification.setSentAt(LocalDateTime.now());
+        notificationRepository.save(notification);
     }
 }

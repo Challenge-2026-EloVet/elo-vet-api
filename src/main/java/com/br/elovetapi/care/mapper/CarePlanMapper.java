@@ -3,6 +3,7 @@ package com.br.elovetapi.care.mapper;
 import com.br.elovetapi.care.dtos.CarePlanItemDTO;
 import com.br.elovetapi.care.dtos.CarePlanRequestDTO;
 import com.br.elovetapi.care.dtos.CarePlanResponseDTO;
+import com.br.elovetapi.care.enums.CarePlanItemStatus;
 import com.br.elovetapi.care.model.CarePlan;
 import com.br.elovetapi.care.model.CarePlanItem;
 
@@ -23,7 +24,7 @@ public class CarePlanMapper {
         return cp;
     }
 
-    public static CarePlanResponseDTO toDTO(CarePlan cp, List<CarePlanItem> items){
+    public static CarePlanResponseDTO toDTO(CarePlan cp, List<CarePlanItem> items) {
         return new CarePlanResponseDTO(
                 cp.getId(),
                 cp.getVeterinaryId(),
@@ -37,23 +38,23 @@ public class CarePlanMapper {
         );
     }
 
-    public static CarePlanItem toItemEntity(Long carePlanId, com.br.elovetapi.care.dtos.CarePlanItemDTO dto){
+    public static CarePlanItem toItemEntity(Long carePlanId, CarePlanItemDTO dto) {
         CarePlanItem item = new CarePlanItem();
         item.setCarePlanId(carePlanId);
         item.setTitle(dto.title());
         item.setDescription(dto.description());
         item.setDueDate(dto.dueDate());
-        item.setStatus(dto.status() == null ? "PENDING" : dto.status());
+        item.setStatus(CarePlanItemStatus.fromValue(dto.status()));
         return item;
     }
 
-    public static CarePlanItemDTO itemToDTO(CarePlanItem item){
+    public static CarePlanItemDTO itemToDTO(CarePlanItem item) {
         return new CarePlanItemDTO(
                 item.getId(),
                 item.getTitle(),
                 item.getDescription(),
                 item.getDueDate(),
-                item.getStatus()
+                item.getStatus() == null ? null : item.getStatus().name()
         );
     }
 }

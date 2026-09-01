@@ -1,5 +1,6 @@
 package com.br.elovetapi.care.model;
 
+import com.br.elovetapi.care.enums.CarePlanItemStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -20,5 +21,6 @@ public class CarePlanItem {
     private String title;
     private String description;
     private LocalDate dueDate;
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private CarePlanItemStatus status = CarePlanItemStatus.PENDING;
 }
