@@ -52,15 +52,14 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          # Certifique-se de que esses secrets existem no novo repositório Elo Vet!
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_F82BAEF4141647199EE2C7D63E5077DB }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_0B282A7B7C994E17A0A5CFE2259FA29D }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_7DF866885F304A2E9078887F8BC12616 }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'api-java-seurm' # Confirme se o nome do App Service na Azure é esse mesmo
+          app-name: 'api-java-seurm'
           slot-name: 'Production'
           package: '*.jar'
