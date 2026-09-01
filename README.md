@@ -4,7 +4,7 @@ Resumo do projeto
 
 Elo Vet é uma solução focada em melhorar a adesão dos tutores aos cuidados pós-consulta e em reduzir churn nas clínicas parceiras. Em vez de hardware, o MVP prioriza:
 
-- experiência conversacional (WhatsApp) para checklists e follow-ups;
+- experiência conversacional para checklists e follow-ups;
 - motor de regras e dados clínicos para disparos proativos;
 - painel web para veterinários fazerem handoff e gerenciarem planos de cuidado.
 
@@ -20,7 +20,7 @@ Integrantes:
 | Lucas Hideki | RM565355 |
 | Wesley Andrade | RM563593 |
 
-Por que esta implementação atende ao objetivo do MVP
+Como esta implementação atende ao objetivo do MVP
 
 - Handoff automatizado: o veterinário gera um plano de cuidados simplificado que é enviado ao tutor (simulado via registro em `notification`).
 - Checklist terapêutico: itens com datas e status (PENDING, DONE, CANCELLED) permitem acompanhamento e geração de lembretes.
