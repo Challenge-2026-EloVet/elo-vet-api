@@ -25,11 +25,11 @@ public class User implements UserDetails {
     private String email;
     @Column(name = "senha_hash")
     private String password;
-    private UserRole tipoUsuario;
+    private String tipoUsuario;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        if(this.tipoUsuario == UserRole.ADMIN) return List.of(new SimpleGrantedAuthority("ROLE_ADMIN"), new SimpleGrantedAuthority("ROLE_USER"));
+        if(this.tipoUsuario.equals(UserRole.ADMIN.getRole())) return List.of(new SimpleGrantedAuthority("ROLE_ADMIN"), new SimpleGrantedAuthority("ROLE_USER"));
         return List.of(new SimpleGrantedAuthority("ROLE_USER"));
     }
 
@@ -59,7 +59,7 @@ public class User implements UserDetails {
     }
 
 
-    public User(String login, String email, String password, UserRole tipoUsuario) {
+    public User(String login, String email, String password, String tipoUsuario) {
         this.login = login;
         this.email = email;
         this.password = password;

@@ -26,6 +26,6 @@ public class CarePlanAuthorizationService {
                 .orElse(false);
     }
     private boolean isAdmin(User user) {
-        return user.getTipoUsuario() != null && user.getTipoUsuario().name().equals("ADMIN");
+        return user.getTipoUsuario() != null && user.getTipoUsuario().equals("ADMIN");
     }
 }
