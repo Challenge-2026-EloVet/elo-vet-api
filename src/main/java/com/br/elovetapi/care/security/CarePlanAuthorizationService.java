@@ -22,10 +22,10 @@ public class CarePlanAuthorizationService {
         }
         return carePlanRepository.findById(carePlanId)
                 .map(CarePlan::getPetOwnerId)
-                .map(ownerId -> Objects.equals(principal.getId(), ownerId))
+                .map(ownerId -> Objects.equals(principal.getIdUsuario(), ownerId))
                 .orElse(false);
     }
     private boolean isAdmin(User user) {
-        return user.getUserRole() != null && user.getUserRole().name().equals("ADMIN");
+        return user.getTipoUsuario() != null && user.getTipoUsuario().name().equals("ADMIN");
     }
 }

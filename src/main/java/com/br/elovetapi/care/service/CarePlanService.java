@@ -67,7 +67,7 @@ public class CarePlanService {
                 .orElseThrow(() -> new CarePlanValidationException("User not found with id: " + dto.petOwnerId()));
 
         User creator = authenticatedUserProvider.getCurrentUser();
-        CarePlan saved = carePlanRepository.save(CarePlanMapper.toEntity(veterinaryId, dto, creator.getId()));
+        CarePlan saved = carePlanRepository.save(CarePlanMapper.toEntity(veterinaryId, dto, creator.getIdUsuario()));
         List<CarePlanItem> items = saveItems(saved.getId(), dto.items());
 
         notifyWithAudit(
@@ -109,7 +109,7 @@ public class CarePlanService {
 
         User currentUser = authenticatedUserProvider.getCurrentUser();
         notifyWithAudit(
-                currentUser.getId(),
+                currentUser.getIdUsuario(),
                 carePlanId,
                 NotificationType.AUDIT_MARK_ITEM,
                 "Item " + item.getId() + " marked " + newStatus + ". Note: " + dto.note(),

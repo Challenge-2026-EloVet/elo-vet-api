@@ -2,7 +2,9 @@ package com.br.elovetapi.user.model;
 
 public enum UserRole {
     ADMIN("admin"),
-    USER("user");
+    USER("user"),
+    VETERINARIO("veterinario"),
+    RESPONSAVEL("responsavel");
 
     private String role;
 

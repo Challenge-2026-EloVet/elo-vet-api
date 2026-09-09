@@ -7,10 +7,17 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class PetMapper {
-    public PetResponseDTO toResponse(Pet pet){
+    public PetResponseDTO toResponse(Pet pet) {
         return new PetResponseDTO(
-                pet.getEloId(),
-                pet.getNome()
+                pet.getIdPet(),
+                pet.getNome(),
+                pet.getEspecie(),
+                pet.getRaca(),
+                pet.getSexo(),
+                pet.getDataNascimento(),
+                pet.getIdadeAproximada(),
+                pet.getFlagCastrado(),
+                pet.getFoto()
         );
     }
 
