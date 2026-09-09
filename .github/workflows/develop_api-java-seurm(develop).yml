@@ -1,9 +1,9 @@
-name: Build and deploy JAR app to Azure Web App - api-java-seurm (production)
+name: Build and deploy JAR app to Azure Web App - api-java-seurm (develop)
 
 on:
   push:
     branches:
-      - main
+      - Develop
   workflow_dispatch:
 
 jobs:
@@ -57,5 +57,5 @@ jobs:
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'api-java-seurm'
-          slot-name: 'Production'
+          slot-name: 'develop'
           package: '*.jar'
