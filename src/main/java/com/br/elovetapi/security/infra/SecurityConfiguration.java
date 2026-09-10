@@ -23,8 +23,8 @@ import java.util.Arrays;
 @EnableMethodSecurity
 public class SecurityConfiguration {
 
-    @Value("${portal.elo-vet.url}")
-    private String URL_PORTAL_ELO;
+    @Value("${cors.allowed-origins}")
+    private String allowedOrigins;
 
     private final SecurityFilter securityFilter;
 
@@ -54,8 +54,13 @@ public class SecurityConfiguration {
 
     @Bean
     public UrlBasedCorsConfigurationSource corsConfigurationSource() {
+        //TODO rever a questão do cors. encontrar uma melhor pratica para definir quem é liberado
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList(URL_PORTAL_ELO));
+        configuration.setAllowedOriginPatterns(
+                Arrays.stream(allowedOrigins.split(","))
+                        .map(String::trim)
+                        .toList()
+        );
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
         configuration.setAllowCredentials(true);
