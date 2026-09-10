@@ -30,8 +30,12 @@ public class Pet {
 
     private Integer idadeAproximada;
 
-    private Boolean flagCastrado;
+    private Integer flagCastrado;
 
+    //TODO avaliar como trabalhar com foto
+    /*
     @Lob
+    @Column(columnDefinition = "bytea")
     private byte[] foto;
+    */
 }

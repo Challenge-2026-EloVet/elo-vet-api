@@ -10,7 +10,7 @@ public record PetResponseDTO(
         Character sexo,
         LocalDate dataNascimento,
         Integer idadeAproximada,
-        Boolean flagCastrado,
-        byte[] foto
+        Integer flagCastrado
+        //byte[] foto
 ) {
 }
