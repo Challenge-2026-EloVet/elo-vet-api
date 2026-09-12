@@ -1,4 +1,4 @@
 package com.br.elovetapi.security.dto;
 
-public record LoginResponseDTO(String token) {
+public record LoginResponseDTO(String token, Long idResponsavel) {
 }

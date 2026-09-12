@@ -12,6 +12,7 @@ import com.br.elovetapi.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ResponsibleService {
@@ -33,6 +34,10 @@ public class ResponsibleService {
     public Responsible getResponsibleById(Long id) {
         return responsibleRepository.findById(id)
                 .orElseThrow(() -> new ResponsibleNotFoundException("Responsible not found with id: " + id));
+    }
+
+    public Optional<Long> findResponsibleIdByUsuarioId(Long idUsuario) {
+        return responsibleRepository.findByUsuarioIdUsuario(idUsuario).map(Responsible::getIdResponsavel);
     }
 
     public ResponsibleResponseDTO createResponsible(ResponsibleRequestDTO responsibleRequestDTO) {
