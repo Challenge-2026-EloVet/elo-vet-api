@@ -36,21 +36,21 @@ public class ResponsibleController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('RESPONSAVEL')")
     public ResponsibleResponseDTO createResponsible(@Valid @RequestBody ResponsibleRequestDTO responsible) {
         return responsibleService.createResponsible(responsible);
     }
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('RESPONSAVEL')")
     public ResponsibleResponseDTO updateResponsible(@PathVariable Long id, @Valid @RequestBody ResponsibleRequestDTO responsible) {
         return responsibleService.updateResponsible(id, responsible);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('RESPONSAVEL')")
     public void deleteResponsible(@PathVariable Long id) {
         responsibleService.deleteResponsible(id);
     }

@@ -28,14 +28,14 @@ public class ResponsiblePetController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('RESPONSAVEL')")
     public ResponsiblePetResponseDTO linkPetToResponsible(@Valid @RequestBody ResponsiblePetRequestDTO responsiblePet) {
         return responsiblePetService.linkPetToResponsible(responsiblePet);
     }
 
     @DeleteMapping("/{idPetResponsavel}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('RESPONSAVEL')")
     public void unlinkPet(@PathVariable Long idPetResponsavel) {
         responsiblePetService.unlinkPet(idPetResponsavel);
     }
