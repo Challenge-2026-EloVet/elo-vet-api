@@ -1,10 +1,10 @@
-package com.br.elovetapi.veterinary.dtos;
+package com.br.elovetapi.responsible.dtos;
 
 import jakarta.validation.constraints.*;
 
 import java.time.LocalDate;
 
-public record VeterinaryRequestDTO(
+public record ResponsibleRequestDTO(
         @NotNull(message = "O ID do usuário não pode ser nulo")
         Long idUsuario,
 
@@ -21,10 +21,6 @@ public record VeterinaryRequestDTO(
 
         @Past(message = "A data de nascimento deve ser uma data passada")
         LocalDate dataNascimento,
-
-        @NotBlank(message = "O CRMV não pode ser nulo ou vazio")
-        @Size(max = 30, message = "O CRMV deve ter no máximo 30 caracteres")
-        String crmv,
 
         @Size(max = 20, message = "O telefone deve ter no máximo 20 caracteres")
         String telefone

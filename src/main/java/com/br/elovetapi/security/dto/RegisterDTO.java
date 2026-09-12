@@ -1,10 +1,9 @@
 package com.br.elovetapi.security.dto;
 
 import com.br.elovetapi.user.model.UserRole;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
+
+import java.time.LocalDate;
 
 public record RegisterDTO(
         @NotBlank(message = "O nome de usuário não pode ser nulo ou vazio")
@@ -21,6 +20,22 @@ public record RegisterDTO(
         String senha,
 
         @NotNull(message = "O tipo de usuário não pode ser nulo")
-        UserRole tipoUsuario
+        UserRole tipoUsuario,
+
+        // Campos abaixo são obrigatórios apenas quando tipoUsuario = RESPONSAVEL
+        @Size(max = 150, message = "O nome completo deve ter no máximo 150 caracteres")
+        String nomeCompleto,
+
+        @Pattern(regexp = "^[0-9]{11}$", message = "O CPF deve conter exatamente 11 dígitos numéricos")
+        String cpf,
+
+        @Size(max = 20, message = "O RG deve ter no máximo 20 caracteres")
+        String rg,
+
+        @Past(message = "A data de nascimento deve ser uma data passada")
+        LocalDate dataNascimento,
+
+        @Size(max = 20, message = "O telefone deve ter no máximo 20 caracteres")
+        String telefone
 ) {
 }
