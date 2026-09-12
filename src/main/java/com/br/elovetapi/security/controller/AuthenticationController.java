@@ -41,7 +41,7 @@ public class AuthenticationController {
     @PostMapping("/login")
     @PreAuthorize("permitAll()")
     public ResponseEntity login(@RequestBody @Valid AuthenticationDTO authenticationDTO){
-        var usernamePassword = new UsernamePasswordAuthenticationToken(authenticationDTO.nomeUsuario(), authenticationDTO.senha());
+        var usernamePassword = new UsernamePasswordAuthenticationToken(authenticationDTO.email(), authenticationDTO.senha());
         var auth = authenticationManager.authenticate(usernamePassword);
 
         var token = tokenService.generateToken((User) auth.getPrincipal());
@@ -53,7 +53,7 @@ public class AuthenticationController {
     @PreAuthorize("permitAll()")
     @Transactional
     public ResponseEntity register(@RequestBody @Valid RegisterDTO registerDTO){
-        if(this.userRepository.findByLogin(registerDTO.nomeUsuario()) != null) return ResponseEntity.badRequest().build();
+        if(this.userRepository.findByEmail(registerDTO.email()).isPresent()) return ResponseEntity.badRequest().build();
 
         if (registerDTO.tipoUsuario() == UserRole.RESPONSAVEL
                 && (registerDTO.nomeCompleto() == null || registerDTO.nomeCompleto().isBlank()
