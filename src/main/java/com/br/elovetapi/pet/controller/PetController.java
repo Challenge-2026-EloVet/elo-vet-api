@@ -36,21 +36,21 @@ public class PetController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('RESPONSAVEL')")
     public PetResponseDTO createPet(@Valid @RequestBody PetRequestDTO pet){
         return petService.createPet(pet);
     }
 
     @PutMapping("/{eloId}")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('RESPONSAVEL')")
     public PetResponseDTO updatePet(@PathVariable Long eloId, @Valid @RequestBody PetRequestDTO pet){
         return petService.updatePet(eloId, pet);
     }
 
     @DeleteMapping("/{eloId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('RESPONSAVEL')")
     public void deletePet(@PathVariable Long eloId){
         petService.deletePet(eloId);
     }
