@@ -78,7 +78,8 @@ public class AuthenticationController {
                     registerDTO.cpf(),
                     registerDTO.rg(),
                     registerDTO.dataNascimento(),
-                    registerDTO.telefone()
+                    registerDTO.telefone(),
+                    null
             ));
         }
 

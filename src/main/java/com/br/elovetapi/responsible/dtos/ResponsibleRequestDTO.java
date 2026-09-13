@@ -1,11 +1,13 @@
 package com.br.elovetapi.responsible.dtos;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 
 import java.time.LocalDate;
 
 public record ResponsibleRequestDTO(
-        @NotNull(message = "O ID do usuário não pode ser nulo")
+        // Obrigatório apenas na criação (POST). No PUT, o usuário associado
+        // já é obtido a partir do responsável encontrado pelo id da URL.
         Long idUsuario,
 
         @NotBlank(message = "O nome completo não pode ser nulo ou vazio")
@@ -23,6 +25,9 @@ public record ResponsibleRequestDTO(
         LocalDate dataNascimento,
 
         @Size(max = 20, message = "O telefone deve ter no máximo 20 caracteres")
-        String telefone
+        String telefone,
+
+        @Valid
+        UsuarioUpdateDTO usuario
 ) {
 }
