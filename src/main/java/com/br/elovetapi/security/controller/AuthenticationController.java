@@ -11,10 +11,12 @@ import com.br.elovetapi.user.model.User;
 import com.br.elovetapi.user.model.UserRole;
 import com.br.elovetapi.user.repository.UserRepository;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -57,14 +59,17 @@ public class AuthenticationController {
     @PostMapping("/register")
     @PreAuthorize("permitAll()")
     @Transactional
-    public ResponseEntity register(@RequestBody @Valid RegisterDTO registerDTO){
+    public ResponseEntity register(@RequestBody @Valid RegisterDTO registerDTO, Authentication authentication){
+        if (registerDTO.tipoUsuario() != UserRole.RESPONSAVEL && !isAdmin(authentication))
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("Apenas administradores podem cadastrar usuários do tipo " + registerDTO.tipoUsuario());
+
         if(this.userRepository.findByEmail(registerDTO.email()).isPresent()) return ResponseEntity.badRequest().build();
 
         if (registerDTO.tipoUsuario() == UserRole.RESPONSAVEL
                 && (registerDTO.nomeCompleto() == null || registerDTO.nomeCompleto().isBlank()
-                    || registerDTO.cpf() == null || registerDTO.cpf().isBlank())) {
+                    || registerDTO.cpf() == null || registerDTO.cpf().isBlank()))
             throw new ResponsibleValidationException("nomeCompleto e cpf são obrigatórios para o cadastro de um usuário RESPONSAVEL");
-        }
 
         String encryptedPassword = new BCryptPasswordEncoder().encode(registerDTO.senha());
         User newUser = new User(registerDTO.nomeUsuario(), registerDTO.email(), encryptedPassword, registerDTO.tipoUsuario().getRole());
@@ -84,5 +89,10 @@ public class AuthenticationController {
         }
 
         return ResponseEntity.ok().build();
+    }
+
+    private boolean isAdmin(Authentication authentication) {
+        return authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
     }
 }
