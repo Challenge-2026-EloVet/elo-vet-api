@@ -1,5 +1,6 @@
 package com.br.elovetapi.user.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -23,6 +24,7 @@ public class User implements UserDetails {
     @Column(name = "nome_usuario")
     private String login;
     private String email;
+    @JsonIgnore
     @Column(name = "senha_hash")
     private String password;
     private String tipoUsuario;

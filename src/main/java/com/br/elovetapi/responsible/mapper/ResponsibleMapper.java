@@ -2,6 +2,7 @@ package com.br.elovetapi.responsible.mapper;
 
 import com.br.elovetapi.responsible.dtos.ResponsibleRequestDTO;
 import com.br.elovetapi.responsible.dtos.ResponsibleResponseDTO;
+import com.br.elovetapi.responsible.dtos.UsuarioResponseDTO;
 import com.br.elovetapi.responsible.model.Responsible;
 import com.br.elovetapi.user.model.User;
 import org.springframework.stereotype.Component;
@@ -16,7 +17,18 @@ public class ResponsibleMapper {
                 responsible.getCpf(),
                 responsible.getRg(),
                 responsible.getDataNascimento(),
-                responsible.getTelefone()
+                responsible.getTelefone(),
+                toUsuarioResponse(responsible.getUsuario())
+        );
+    }
+
+    private UsuarioResponseDTO toUsuarioResponse(User usuario) {
+        if (usuario == null) return null;
+        return new UsuarioResponseDTO(
+                usuario.getIdUsuario(),
+                usuario.getLogin(),
+                usuario.getEmail(),
+                usuario.getTipoUsuario()
         );
     }
 

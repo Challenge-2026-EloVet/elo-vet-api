@@ -21,11 +21,17 @@ public class PetService {
         this.petMapper = petMapper;
     }
 
-    public List<Pet> getAllPets() {
-        return petRepository.findAll();
+    public List<PetResponseDTO> getAllPets() {
+        return petRepository.findAll().stream()
+                .map(petMapper::toResponse)
+                .toList();
     }
 
-    public Pet getPetById(Long eloId) {
+    public PetResponseDTO getPetById(Long eloId) {
+        return petMapper.toResponse(findPetOrThrow(eloId));
+    }
+
+    private Pet findPetOrThrow(Long eloId) {
         return petRepository.findById(eloId).orElseThrow(() -> new PetNotFoundException("Pet not found with id: " + eloId));
     }
 
@@ -35,12 +41,12 @@ public class PetService {
     }
 
     public PetResponseDTO updatePet(Long eloId, PetRequestDTO petRequestDTO) {
-        Pet existingPet = getPetById(eloId);
+        Pet existingPet = findPetOrThrow(eloId);
         petMapper.updatePetFromRequest(petRequestDTO, existingPet);
         return petMapper.toResponse(petRepository.save(existingPet));
     }
 
     public void deletePet(Long eloId) {
-        petRepository.delete(getPetById(eloId));
+        petRepository.delete(findPetOrThrow(eloId));
     }
 }

@@ -31,11 +31,17 @@ public class ResponsibleService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public List<Responsible> getAllResponsibles() {
-        return responsibleRepository.findAll();
+    public List<ResponsibleResponseDTO> getAllResponsibles() {
+        return responsibleRepository.findAll().stream()
+                .map(responsibleMapper::toResponse)
+                .toList();
     }
 
-    public Responsible getResponsibleById(Long id) {
+    public ResponsibleResponseDTO getResponsibleById(Long id) {
+        return responsibleMapper.toResponse(findResponsibleOrThrow(id));
+    }
+
+    private Responsible findResponsibleOrThrow(Long id) {
         return responsibleRepository.findById(id)
                 .orElseThrow(() -> new ResponsibleNotFoundException("Responsible not found with id: " + id));
     }
@@ -55,7 +61,7 @@ public class ResponsibleService {
     }
 
     public ResponsibleResponseDTO updateResponsible(Long id, ResponsibleRequestDTO responsibleRequestDTO) {
-        Responsible existingResponsible = getResponsibleById(id);
+        Responsible existingResponsible = findResponsibleOrThrow(id);
         updateUsuarioFromRequest(responsibleRequestDTO, existingResponsible.getUsuario());
         responsibleMapper.updateResponsibleFromRequest(responsibleRequestDTO, existingResponsible);
         return responsibleMapper.toResponse(responsibleRepository.save(existingResponsible));
@@ -85,6 +91,6 @@ public class ResponsibleService {
     }
 
     public void deleteResponsible(Long id) {
-        responsibleRepository.delete(getResponsibleById(id));
+        responsibleRepository.delete(findResponsibleOrThrow(id));
     }
 }
