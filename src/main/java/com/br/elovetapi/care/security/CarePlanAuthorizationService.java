@@ -21,8 +21,8 @@ public class CarePlanAuthorizationService {
             return true;
         }
         return carePlanRepository.findById(carePlanId)
-                .map(CarePlan::getPetOwnerId)
-                .map(ownerId -> Objects.equals(principal.getIdUsuario(), ownerId))
+                .map(carePlan -> Objects.equals(principal.getIdUsuario(), carePlan.getPetOwnerId())
+                        || Objects.equals(principal.getIdUsuario(), carePlan.getVeterinaryId()))
                 .orElse(false);
     }
     private boolean isAdmin(User user) {

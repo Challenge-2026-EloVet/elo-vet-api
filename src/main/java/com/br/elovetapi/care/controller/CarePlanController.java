@@ -21,20 +21,20 @@ public class CarePlanController {
     }
 
     @PostMapping("/veterinaries/{vetId}/care-plans")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','VETERINARIO')")
     public ResponseEntity<CarePlanResponseDTO> createCarePlan(@PathVariable Long vetId, @RequestBody @Valid CarePlanRequestDTO dto){
         var created = carePlanService.createCarePlan(vetId, dto);
         return ResponseEntity.status(201).body(created);
     }
 
     @GetMapping("/users/{userId}/care-plans")
-    @PreAuthorize("hasAnyRole('USER','ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<CarePlanResponseDTO>> listForUser(@PathVariable Long userId){
         return ResponseEntity.ok(carePlanService.listCarePlansForUser(userId));
     }
 
     @PostMapping("/care-plans/{carePlanId}/items/{itemId}/mark")
-    @PreAuthorize("hasAnyRole('USER','ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<CarePlanResponseDTO> markItem(@PathVariable Long carePlanId, @PathVariable Long itemId, @RequestBody @Valid MarkItemRequestDTO dto){
         return ResponseEntity.ok(carePlanService.markItem(carePlanId, itemId, dto));
     }
