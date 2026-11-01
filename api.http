@@ -1,154 +1,237 @@
-### Elo Vet - Coleção de requisições (HTTP Client)
+### =====================================================================
+### ELO VET API - Demonstração do fluxo principal
+### =====================================================================
+#
+# Como usar (HTTP Client do IntelliJ):
+#   1. Ajuste as variáveis abaixo (URL e credenciais de um ADMIN existente).
+#   2. Execute as requisições NA ORDEM, de cima para baixo.
+#      Tokens e IDs retornados são salvos automaticamente pelos scripts "> {% ... %}"
+#      e reaproveitados nas requisições seguintes.
+#
+# Fluxo demonstrado:
+#   Autenticação e perfis -> cadastro do tutor -> cadastro do pet
+#   -> veterinário cria o plano de cuidado -> tutor marca um item como feito
 
-# Instruções:
-# 1) Use o HTTP Client do IntelliJ (abrir este arquivo e executar blocos) ou execute via curl substituindo as variáveis.
-# 2) Faça o registro/login para obter os tokens JWT e preencha as variáveis `ADMIN_TOKEN` e `USER_TOKEN` abaixo.
+@baseUrl = http://localhost:8080
+# @baseUrl = https://<SEU-APP>.azurewebsites.net
 
-@ADMIN_TOKEN =
-@USER_TOKEN =
+@adminEmail = admin@clyvo.com.br
+@adminSenha = <SENHA-DO-ADMIN>
 
-### Autenticação — Registro e Login
+# ID do veterinário responsável pelo plano (path de /veterinaries/{vetId}/care-plans)
+@vetId = 1
 
-### Registrar Admin (veterinário/proxy)
-POST http://localhost:8080/auth/register
+
+### =====================================================================
+### 1. AUTENTICAÇÃO E PERFIS
+### =====================================================================
+
+### 1.1 Login do ADMIN
+# Autentica com e-mail e senha e devolve um token JWT (válido por 2 horas).
+# O token fica salvo em {{adminToken}}.
+POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
 {
-  "login": "admin1",
-  "password": "adminpass",
-  "role": "ADMIN"
+  "email": "{{adminEmail}}",
+  "senha": "{{adminSenha}}"
 }
 
-### Login Admin (pegar token em campo token)
-POST http://localhost:8080/auth/login
+> {%
+    client.global.set("adminToken", response.body.token);
+%}
+
+
+### 1.2 [Segurança] Tentar se cadastrar como ADMIN sem estar logado
+# O cadastro público só aceita o perfil RESPONSAVEL (tutor).
+# Qualquer outro perfil exige o token de um ADMIN.
+# Resultado esperado: 403 Forbidden.
+POST {{baseUrl}}/auth/register
 Content-Type: application/json
 
 {
-  "login": "admin1",
-  "password": "adminpass"
+  "nomeUsuario": "invasor",
+  "email": "invasor@teste.com",
+  "senha": "senha123",
+  "tipoUsuario": "ADMIN"
 }
 
-### Registrar Tutor (USER)
-POST http://localhost:8080/auth/register
+
+### 1.3 ADMIN cadastra um veterinário
+# Com o token de ADMIN, o cadastro de perfis internos é permitido.
+# Resultado esperado: 200 OK.
+# Se o e-mail já existir, a API devolve 400: troque o e-mail.
+POST {{baseUrl}}/auth/register
 Content-Type: application/json
+Authorization: Bearer {{adminToken}}
 
 {
-  "login": "tutor1",
-  "password": "tutorpass",
-  "role": "USER"
+  "nomeUsuario": "dra.helena",
+  "email": "helena.costa@elovet.com.br",
+  "senha": "helena123",
+  "tipoUsuario": "VETERINARIO"
 }
 
-### Login Tutor
-POST http://localhost:8080/auth/login
+
+### 1.4 Login do veterinário
+# O token fica salvo em {{vetToken}}.
+POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
 {
-  "login": "tutor1",
-  "password": "tutorpass"
+  "email": "helena.costa@elovet.com.br",
+  "senha": "helena123"
 }
 
-### CRUD de Pet
+> {%
+    client.global.set("vetToken", response.body.token);
+%}
 
-### Listar pets
-GET http://localhost:8080/pet
-Authorization: Bearer {{ADMIN_TOKEN}}
 
-### Obter pet por id
-GET http://localhost:8080/pet/{{PET_ID}}
-Authorization: Bearer {{ADMIN_TOKEN}}
+### =====================================================================
+### 2. CADASTRO DO TUTOR
+### =====================================================================
 
-### Criar pet (ADMIN)
-POST http://localhost:8080/pet
+### 2.1 Cadastro público do tutor (perfil RESPONSAVEL)
+# Cria o login e o registro de responsável na mesma transação.
+# Para RESPONSAVEL, nome completo e CPF são obrigatórios.
+# Resultado esperado: 200 OK. Se e-mail ou CPF já existirem, troque os valores.
+POST {{baseUrl}}/auth/register
 Content-Type: application/json
-Authorization: Bearer {{ADMIN_TOKEN}}
 
 {
-  "nome": "Rex"
+  "nomeUsuario": "rafael.tutor",
+  "email": "rafael.tutor@gmail.com",
+  "senha": "rafael123",
+  "tipoUsuario": "RESPONSAVEL",
+  "nomeCompleto": "Rafael Martins",
+  "cpf": "12345678909",
+  "telefone": "11988887777",
+  "dataNascimento": "1995-04-12"
 }
 
-### Atualizar pet (ADMIN)
-PUT http://localhost:8080/pet/{{PET_ID}}
+
+### 2.2 Login do tutor
+# Para o perfil RESPONSAVEL, o login também devolve o idResponsavel,
+# usado pelo app mobile. Token e ID ficam salvos em {{tutorToken}} e {{idResponsavel}}.
+POST {{baseUrl}}/auth/login
 Content-Type: application/json
-Authorization: Bearer {{ADMIN_TOKEN}}
 
 {
-  "nome": "Rex Jr"
+  "email": "rafael.tutor@gmail.com",
+  "senha": "rafael123"
 }
 
-### Deletar pet (ADMIN)
-DELETE http://localhost:8080/pet/{{PET_ID}}
-Authorization: Bearer {{ADMIN_TOKEN}}
+> {%
+    client.global.set("tutorToken", response.body.token);
+    client.global.set("idResponsavel", response.body.idResponsavel);
+%}
 
-### CRUD de Veterinário
 
-### Listar veterinários
-GET http://localhost:8080/veterinary
-Authorization: Bearer {{ADMIN_TOKEN}}
+### 2.3 Tutor consulta o próprio cadastro
+# A resposta é um DTO: traz os dados do responsável e do login,
+# mas nunca o hash da senha.
+# O id do usuário fica salvo em {{tutorUserId}} (usado como dono do plano de cuidado).
+GET {{baseUrl}}/responsible/{{idResponsavel}}
+Authorization: Bearer {{tutorToken}}
 
-### Obter veterinário por id
-GET http://localhost:8080/veterinary/{{VET_ID}}
-Authorization: Bearer {{ADMIN_TOKEN}}
+> {%
+    client.global.set("tutorUserId", response.body.usuario.idUsuario);
+%}
 
-### Criar veterinário (ADMIN)
-POST http://localhost:8080/veterinary
+
+### =====================================================================
+### 3. CADASTRO DO PET
+### =====================================================================
+
+### 3.1 Tutor cadastra o pet já vinculado a ele
+# Cria o pet e o vínculo pet-responsável em uma única chamada.
+# O id do pet fica salvo em {{petId}}.
+POST {{baseUrl}}/responsible/pets
 Content-Type: application/json
-Authorization: Bearer {{ADMIN_TOKEN}}
+Authorization: Bearer {{tutorToken}}
 
 {
-  "nome": "Dra. Ana Silva",
-  "crmv": 1001
+  "idResponsavel": {{idResponsavel}},
+  "pet": {
+    "nome": "Thor",
+    "especie": "Cachorro",
+    "raca": "Dachshund",
+    "sexo": "M",
+    "dataNascimento": "2022-03-10",
+    "flagCastrado": 1
+  }
 }
 
-### Atualizar veterinário (ADMIN)
-PUT http://localhost:8080/veterinary/{{VET_ID}}
+> {%
+    client.global.set("petId", response.body.pet.idPet);
+%}
+
+
+### 3.2 Tutor lista os pets vinculados a ele
+GET {{baseUrl}}/responsible/pets/{{idResponsavel}}
+Authorization: Bearer {{tutorToken}}
+
+
+### =====================================================================
+### 4. PLANO DE CUIDADO (HANDOFF PÓS-CONSULTA)
+### =====================================================================
+
+### 4.1 [Segurança] Tutor tenta criar um plano de cuidado
+# Criar plano é exclusivo de ADMIN e VETERINARIO.
+# Resultado esperado: 403 Forbidden.
+POST {{baseUrl}}/veterinaries/{{vetId}}/care-plans
 Content-Type: application/json
-Authorization: Bearer {{ADMIN_TOKEN}}
+Authorization: Bearer {{tutorToken}}
 
 {
-  "nome": "Dra. Ana S.",
-  "crmv": 1001
-}
-
-### Deletar veterinário (ADMIN)
-DELETE http://localhost:8080/veterinary/{{VET_ID}}
-Authorization: Bearer {{ADMIN_TOKEN}}
-
-### Fluxo Care (Planos de cuidados)
-
-### Criar care plan (HANDOFF) como ADMIN
-POST http://localhost:8080/api/v1/veterinaries/{{VET_ID}}/care-plans
-Content-Type: application/json
-Authorization: Bearer {{ADMIN_TOKEN}}
-
-{
-  "petId": {{PET_ID}},
-  "petOwnerId": {{USER_ID}},
-  "notes": "Plano de cuidados simplificado",
+  "petId": {{petId}},
+  "petOwnerId": {{tutorUserId}},
   "items": [
-    { "title": "Dar medicação X", "description": "2x ao dia", "dueDate": "2030-01-01" },
-    { "title": "Retorno em 7 dias", "description": "Avaliação clínica", "dueDate": "2030-01-08" }
+    { "title": "Item qualquer", "dueDate": "2030-01-01" }
   ]
 }
 
-### Listar care plans para um usuário (tutor)
-GET http://localhost:8080/api/v1/users/{{USER_ID}}/care-plans
-Authorization: Bearer {{USER_TOKEN}}
 
-### Marcar item do care plan (tutor)
-POST http://localhost:8080/api/v1/care-plans/{{CARE_PLAN_ID}}/items/{{ITEM_ID}}/mark
+### 4.2 Veterinário cria o plano de cuidado após a consulta
+# Gera o checklist do tutor e registra a notificação de handoff
+# (mais um registro de auditoria) na tabela notification.
+# O id do plano e do primeiro item ficam salvos em {{carePlanId}} e {{itemId}}.
+POST {{baseUrl}}/veterinaries/{{vetId}}/care-plans
 Content-Type: application/json
-Authorization: Bearer {{USER_TOKEN}}
+Authorization: Bearer {{vetToken}}
+
+{
+  "petId": {{petId}},
+  "petOwnerId": {{tutorUserId}},
+  "notes": "Suspeita de hérnia de disco toracolombar. Repouso e analgesia.",
+  "items": [
+    { "title": "Repouso estrito", "description": "Evitar escadas, saltos e caminhadas por 14 dias", "dueDate": "2030-01-14" },
+    { "title": "Analgésico", "description": "Conforme prescrição, de 12 em 12 horas", "dueDate": "2030-01-05" },
+    { "title": "Retorno ao consultório", "description": "Reavaliação clínica", "dueDate": "2030-01-03" }
+  ]
+}
+
+> {%
+    client.global.set("carePlanId", response.body.id);
+    client.global.set("itemId", response.body.items[0].id);
+%}
+
+
+### 4.3 Veterinário consulta os planos de cuidado do tutor
+# Lista os planos e o status de cada item do checklist.
+GET {{baseUrl}}/users/{{tutorUserId}}/care-plans
+Authorization: Bearer {{vetToken}}
+
+
+### 4.4 Tutor marca um item do checklist como feito
+# Só o dono do plano (ou o veterinário que o criou, ou um ADMIN) pode marcar itens.
+# Status aceitos: PENDING, DONE e CANCELLED. A ação gera um registro de auditoria.
+POST {{baseUrl}}/care-plans/{{carePlanId}}/items/{{itemId}}/mark
+Content-Type: application/json
+Authorization: Bearer {{tutorToken}}
 
 {
   "status": "DONE",
-  "note": "Medicação administrada"
+  "note": "Thor ficou em repouso o dia todo"
 }
-
-### Processar reminders (endpoint administrativo manual)
-POST http://localhost:8080/api/v1/admin/process-reminders
-Authorization: Bearer {{ADMIN_TOKEN}}
-
-### Observações
-# - Substitua as variáveis {{ADMIN_TOKEN}}, {{USER_TOKEN}}, {{PET_ID}}, {{VET_ID}}, {{USER_ID}}, {{CARE_PLAN_ID}}, {{ITEM_ID}} pelos valores reais retornados pela API.
-# - O `api.http` é um ponto de partida; ajuste datas e IDs conforme necessário.
-
