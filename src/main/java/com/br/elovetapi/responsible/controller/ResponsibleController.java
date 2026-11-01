@@ -2,7 +2,6 @@ package com.br.elovetapi.responsible.controller;
 
 import com.br.elovetapi.responsible.dtos.ResponsibleRequestDTO;
 import com.br.elovetapi.responsible.dtos.ResponsibleResponseDTO;
-import com.br.elovetapi.responsible.model.Responsible;
 import com.br.elovetapi.responsible.service.ResponsibleService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -23,14 +22,14 @@ public class ResponsibleController {
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     @PreAuthorize("isAuthenticated()")
-    public List<Responsible> getAllResponsibles() {
+    public List<ResponsibleResponseDTO> getAllResponsibles() {
         return responsibleService.getAllResponsibles();
     }
 
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     @PreAuthorize("isAuthenticated()")
-    public Responsible getResponsibleById(@PathVariable Long id) {
+    public ResponsibleResponseDTO getResponsibleById(@PathVariable Long id) {
         return responsibleService.getResponsibleById(id);
     }
 

@@ -1,5 +1,6 @@
 package com.br.elovetapi.user.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -23,14 +24,14 @@ public class User implements UserDetails {
     @Column(name = "nome_usuario")
     private String login;
     private String email;
+    @JsonIgnore
     @Column(name = "senha_hash")
     private String password;
     private String tipoUsuario;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        if(this.tipoUsuario.equals(UserRole.ADMIN.getRole())) return List.of(new SimpleGrantedAuthority("ROLE_ADMIN"), new SimpleGrantedAuthority("ROLE_USER"));
-        return List.of(new SimpleGrantedAuthority("ROLE_" + this.tipoUsuario), new SimpleGrantedAuthority("ROLE_USER"));
+        return List.of(new SimpleGrantedAuthority("ROLE_" + this.tipoUsuario));
     }
 
     @Override

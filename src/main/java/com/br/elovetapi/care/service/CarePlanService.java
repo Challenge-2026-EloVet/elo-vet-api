@@ -56,7 +56,7 @@ public class CarePlanService {
     }
 
     @Transactional
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('VETERINARIO'))")
     public CarePlanResponseDTO createCarePlan(Long veterinaryId, CarePlanRequestDTO dto) {
         carePlanValidator.validateCreateDto(dto);
 
@@ -82,7 +82,7 @@ public class CarePlanService {
         return CarePlanMapper.toDTO(saved, items);
     }
 
-    @PreAuthorize("hasRole('ADMIN') or #userId == authentication.principal.id")
+    @PreAuthorize("hasAnyRole('ADMIN','VETERINARIO')")
     public List<CarePlanResponseDTO> listCarePlansForUser(Long userId) {
         List<CarePlan> plans = carePlanRepository.findByPetOwnerId(userId);
         return plans.stream()

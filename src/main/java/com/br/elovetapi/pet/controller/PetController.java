@@ -2,7 +2,6 @@ package com.br.elovetapi.pet.controller;
 
 import com.br.elovetapi.pet.dtos.PetRequestDTO;
 import com.br.elovetapi.pet.dtos.PetResponseDTO;
-import com.br.elovetapi.pet.model.Pet;
 import com.br.elovetapi.pet.service.PetService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -23,14 +22,14 @@ public class PetController {
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     @PreAuthorize("isAuthenticated()")
-    public List<Pet> getAllPets() {
+    public List<PetResponseDTO> getAllPets() {
         return petService.getAllPets();
     }
 
     @GetMapping("/{eloId}")
     @ResponseStatus(HttpStatus.OK)
     @PreAuthorize("isAuthenticated()")
-    public Pet getPetById(@PathVariable Long eloId) {
+    public PetResponseDTO getPetById(@PathVariable Long eloId) {
         return petService.getPetById(eloId);
     }
 

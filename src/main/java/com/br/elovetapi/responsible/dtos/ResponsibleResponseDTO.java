@@ -9,6 +9,7 @@ public record ResponsibleResponseDTO(
         String cpf,
         String rg,
         LocalDate dataNascimento,
-        String telefone
+        String telefone,
+        UsuarioResponseDTO usuario
 ) {
 }
