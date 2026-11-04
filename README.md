@@ -22,7 +22,7 @@ Esta é a **API backend** do ecossistema. Ela concentra as regras de negócio, a
 
 ## 🔗 Links
 
-- 📹 **Vídeo da apresentação:** `[ADICIONAR LINK]`
+- 📹 **Vídeo da apresentação:** https://www.youtube.com/watch?v=U0qIjOQwTyY
 - 📱 **Repositório do app mobile:** https://github.com/Challenge-2026-EloVet/EloPet-Mobile
 - 🤖 **Bira AI (microsserviço de IA):** https://github.com/Challenge-2026-EloVet/bira-ai-api
 
